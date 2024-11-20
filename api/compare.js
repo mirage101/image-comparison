@@ -1,5 +1,5 @@
 const multer = require('multer');
-const PNG = require('pngjs').PNG;
+const { PNG } = require('pngjs');
 const pixelmatch = require('pixelmatch');
 
 // Configure multer for memory storage
@@ -7,7 +7,10 @@ const storage = multer.memoryStorage();
 const upload = multer({ 
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
-});
+}).fields([
+    { name: 'image1', maxCount: 1 },
+    { name: 'image2', maxCount: 1 }
+]);
 
 // Helper function to process multer upload
 const runMiddleware = (req, res, fn) => {
@@ -21,27 +24,50 @@ const runMiddleware = (req, res, fn) => {
     });
 };
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
+
+    // Handle OPTIONS request
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
+    // Only allow POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
         // Handle file upload
-        await runMiddleware(req, res, upload.fields([
-            { name: 'image1', maxCount: 1 },
-            { name: 'image2', maxCount: 1 }
-        ]));
+        await runMiddleware(req, res, upload);
 
-        const files = req.files;
-        
-        if (!files || !files.image1 || !files.image2) {
+        if (!req.files || !req.files.image1 || !req.files.image2) {
             return res.status(400).json({ error: 'Please upload both images' });
         }
 
         // Read images from buffer
-        const img1 = PNG.sync.read(files.image1[0].buffer);
-        const img2 = PNG.sync.read(files.image2[0].buffer);
+        const img1Data = req.files.image1[0].buffer;
+        const img2Data = req.files.image2[0].buffer;
+
+        let img1, img2;
+        try {
+            img1 = PNG.sync.read(img1Data);
+            img2 = PNG.sync.read(img2Data);
+        } catch (error) {
+            console.error('PNG parsing error:', error);
+            return res.status(400).json({
+                error: 'Error parsing images. Please ensure both files are valid PNG images.',
+                details: error.message
+            });
+        }
 
         // Check dimensions
         if (img1.width !== img2.width || img1.height !== img2.height) {
@@ -86,4 +112,4 @@ export default async function handler(req, res) {
             details: error.message
         });
     }
-}
+};
