@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('image2', file2);
 
         try {
-            const response = await fetch('/compare', {
+            const response = await fetch('/api/compare', {
                 method: 'POST',
                 body: formData
             });
@@ -123,7 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show original images and diff
             document.getElementById('finalImage1').innerHTML = `<img src="${URL.createObjectURL(file1)}" alt="Image 1">`;
             document.getElementById('finalImage2').innerHTML = `<img src="${URL.createObjectURL(file2)}" alt="Image 2">`;
-            document.getElementById('diffImage').innerHTML = `<img src="${data.diffImage}?t=${Date.now()}" alt="Difference">`;
+            // The diff image is now base64
+            document.getElementById('diffImage').innerHTML = `<img src="${data.diffImage}" alt="Difference">`;
             
             resultsDiv.style.display = 'flex';
         } catch (error) {
