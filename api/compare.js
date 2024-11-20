@@ -26,17 +26,15 @@ const runMiddleware = (req, res, fn) => {
 
 // Export the API handler function
 module.exports = async (req, res) => {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
-
     // Handle preflight request
     if (req.method === 'OPTIONS') {
+        res.setHeader('Access-Control-Allow-Credentials', true);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+        res.setHeader(
+            'Access-Control-Allow-Headers',
+            'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+        );
         res.status(200).end();
         return;
     }
@@ -50,7 +48,6 @@ module.exports = async (req, res) => {
         // Process the file upload
         await runMiddleware(req, res, upload);
 
-        // Validate files
         if (!req.files || !req.files.image1 || !req.files.image2) {
             return res.status(400).json({ error: 'Please upload both images' });
         }
@@ -71,47 +68,46 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Check dimensions
+        // Check if images have the same dimensions
         if (img1.width !== img2.width || img1.height !== img2.height) {
             return res.status(400).json({
                 error: 'Images must have the same dimensions',
-                dimensions: {
-                    image1: `${img1.width}x${img1.height}`,
-                    image2: `${img2.width}x${img2.height}`
-                }
+                dimensions1: `${img1.width}x${img1.height}`,
+                dimensions2: `${img2.width}x${img2.height}`
             });
         }
 
-        // Create diff PNG
-        const { width, height } = img1;
-        const diff = new PNG({ width, height });
-
+        // Create output image
+        const diff = new PNG({ width: img1.width, height: img1.height });
+        
         // Compare images
         const numDiffPixels = pixelmatch(
             img1.data,
             img2.data,
             diff.data,
-            width,
-            height,
+            img1.width,
+            img1.height,
             { threshold: 0.1 }
         );
 
-        // Convert diff to base64
+        // Calculate percentage difference
+        const totalPixels = img1.width * img1.height;
+        const percentDiff = ((numDiffPixels / totalPixels) * 100).toFixed(2);
+
+        // Convert diff image to base64
         const diffBuffer = PNG.sync.write(diff);
         const diffBase64 = `data:image/png;base64,${diffBuffer.toString('base64')}`;
 
         // Send response
         res.status(200).json({
-            diffImage: diffBase64,
             difference: numDiffPixels,
-            totalPixels: width * height,
-            percentDiff: ((numDiffPixels / (width * height)) * 100).toFixed(2)
+            totalPixels: totalPixels,
+            percentDiff: percentDiff,
+            diffImage: diffBase64
         });
+
     } catch (error) {
         console.error('Server error:', error);
-        res.status(500).json({
-            error: 'Error processing images',
-            details: error.message
-        });
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 };
