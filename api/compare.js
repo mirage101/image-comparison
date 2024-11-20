@@ -25,7 +25,7 @@ const runMiddleware = (req, res, fn) => {
 };
 
 // Export the API handler function
-module.exports = async function(req, res) {
+module.exports = async (req, res) => {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
