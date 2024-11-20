@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Comparison Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Image Comparison Tool</h1>
+        <h3>NB: Please select two images to compare with exact dimensions (Width x Height)</h3>
+        <div class="row">
+            <div class="col-md-6 offset-md-3 form-pos">
+                <form id="uploadForm" class="mb-4">
+                    <div class="mb-3 col-adjust">
+                        <label for="image1" class="form-label">First Image:</label>
+                        <input type="file" class="form-control" id="image1" name="image1" accept="image/*" required>
+                        <div id="image1Preview" class="mt-2 preview-container"></div>
+                    </div>                    
+                    <div class="mb-3 col-adjust">
+                        <label for="image2" class="form-label">Second Image:</label>
+                        <input type="file" class="form-control" id="image2" name="image2" accept="image/*" required>
+                        <div id="image2Preview" class="mt-2 preview-container"></div>
+                    </div>                    
+                    <button type="submit" class="btn btn-primary w-100 form-btn-position">Compare Images</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="results" class="row mt-4" style="display: none;">
+            <div class="col-12">
+                <h3 class="text-center mb-3">Comparison Results</h3>
+                <div class="results-stats text-center mb-3">
+                    <p>Difference: <span id="diffPercentage"></span>% of pixels</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h4 class="text-center">Image 1</h4>
+                <div id="finalImage1" class="image-container"></div>
+            </div>
+            <div class="col-md-4">
+                <h4 class="text-center">Image 2</h4>
+                <div id="finalImage2" class="image-container"></div>
+            </div>
+            <div class="col-md-4">
+                <h4 class="text-center">Difference</h4>
+                <div id="diffImage" class="image-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>
