@@ -44,11 +44,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
 
-            const result = await response.json();
-
             if (!response.ok) {
-                throw new Error(result.error || 'Error comparing images');
+                const errorText = await response.text();
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    throw new Error(errorJson.error || 'Error comparing images');
+                } catch (parseError) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
             }
+
+            const result = await response.json();
 
             // Display results
             diffImage.src = result.diffImage;
