@@ -24,7 +24,8 @@ const runMiddleware = (req, res, fn) => {
     });
 };
 
-module.exports = async (req, res) => {
+// Export the API handler function
+module.exports = async function(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -34,7 +35,7 @@ module.exports = async (req, res) => {
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     );
 
-    // Handle OPTIONS request
+    // Handle preflight request
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
@@ -46,9 +47,10 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // Handle file upload
+        // Process the file upload
         await runMiddleware(req, res, upload);
 
+        // Validate files
         if (!req.files || !req.files.image1 || !req.files.image2) {
             return res.status(400).json({ error: 'Please upload both images' });
         }
@@ -106,7 +108,7 @@ module.exports = async (req, res) => {
             percentDiff: ((numDiffPixels / (width * height)) * 100).toFixed(2)
         });
     } catch (error) {
-        console.error('Comparison error:', error);
+        console.error('Server error:', error);
         res.status(500).json({
             error: 'Error processing images',
             details: error.message
