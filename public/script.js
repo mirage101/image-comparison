@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(form);
 
         try {
-            const response = await fetch('/api/compare', {
+            const response = await fetch('/api/compare.js', {
                 method: 'POST',
                 body: formData
             });
